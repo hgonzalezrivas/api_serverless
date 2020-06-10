@@ -1,0 +1,51 @@
+service: upx-sls-api-apiName
+provider:
+  name: aws
+  runtime: python3.7
+  vpc:
+    securityGroupIds:
+      - sg-0f4b1287f9f690fea
+    subnetIds:
+      - subnet-0783c3a1e5f85c96f
+      - subnet-03607592d34aa0823
+  stage: dev
+  region: us-east-1
+  apiName: ${self:service}-api
+  stackName: ${self:service}-cloudformation
+  memorySize: 128
+  role: arn:aws:iam::069272698867:role/lambda_demos
+  deploymentBucket:
+    name: upaxer-serverless-api
+    versioning: true
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+  - serverless-deployment-bucket
+package:
+  exclude:
+    - venv/**
+custom:
+  wsgi:
+    app: app.app
+    packRequirements: false
+functions:
+  app:
+    name: ${self:service}
+    handler: wsgi_handler.handler
+    description: API Services for UPAX, Path /user_info
+    memorySize: 512
+    timeout: 30
+    layers:
+      - arn:aws:lambda:us-east-1:069272698867:layer:cx-oracle-layer:12
+      - arn:aws:lambda:us-east-1:069272698867:layer:flask-layer:3
+    vpc:
+      securityGroupIds:
+        - sg-0f4b1287f9f690fea
+      subnetIds:
+        - subnet-0783c3a1e5f85c96f
+        - subnet-03607592d34aa0823
+    events:
+      - http:
+          method: any
+          path: /{proxy+}
+          cors: true

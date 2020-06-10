@@ -1,0 +1,11 @@
+{
+  "name": "upaxer-api-user",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-deployment-bucket": "^1.1.0",
+    "serverless-python-requirements": "^5.0.0",
+    "serverless-wsgi": "^1.7.3"
+  }
+}
