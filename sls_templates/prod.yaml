@@ -1,0 +1,67 @@
+service: upx-sls-api-apiName
+provider:
+  name: aws
+  runtime: python3.7
+  vpc:
+    securityGroupIds:
+      - sg-40d6ad35
+    subnetIds:
+      - subnet-09389e54
+      - subnet-e9238ec6
+  stage: prod
+  region: us-east-1
+  apiName: ${self:service}-api
+  stackName: ${self:service}-cloudformation
+  memorySize: 128
+  role: arn:aws:iam::460503004594:role/service-role/lambda
+  deploymentBucket:
+    name: upx-sls-api
+    versioning: true
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+  - serverless-deployment-bucket
+  - serverless-domain-manager
+package:
+  exclude:
+    - venv/**
+    - package-lock.json
+    - package.json
+    - node_modules/**
+custom:
+  wsgi:
+    app: app.app
+    packRequirements: false
+  domain:
+    app: apisls.upaxer.com
+    admin: adminsls.upaxer.com
+  customDomain:
+    domainName: ${self:custom.domain.${opt:stage}}
+    basePath: path
+    stage: ${self:provider.stage}
+    certificateName: '*.upaxer.com'
+    createRoute53Record: true
+    endpointType: 'regional'
+    securityPolicy: tls_1_2
+    apiType: rest
+functions:
+  app:
+    name: ${self:service}
+    handler: wsgi_handler.handler
+    description: API for UPX Serverless, Path /user_info
+    memorySize: 512
+    timeout: 30
+    layers:
+      - arn:aws:lambda:us-east-1:460503004594:layer:cx-oracle-lyer:1
+      - arn:aws:lambda:us-east-1:460503004594:layer:flask-layer:1
+    vpc:
+      securityGroupIds:
+        - sg-40d6ad35
+      subnetIds:
+        - subnet-09389e54
+        - subnet-e9238ec6
+    events:
+      - http:
+          method: any
+          path: /{proxy+}
+          cors: true
